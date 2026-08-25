@@ -20,32 +20,38 @@
 //   if (isError)   return <p>Error: {error.message}</p>;
 //   return <ul>{data.map((t) => <li key={t.id}>{t.title}</li>)}</ul>;
 // ─────────────────────────────────────────────────────────────
-import { useState, useEffect } from "react";
-import { getThreads } from "../services/threads.service";
 
-export default function ThreadList() {
-  const [threads, setThreads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+import { useQuery } from "@tanstack/react-query";
+import { getThreads } from "../services/threads";
 
-  useEffect(() => {
-    getThreads()
-      .then(setThreads)
-      .catch(setError)
-      .finally(() => setLoading(false));
-  }, []);
+function ThreadList() {
+  const {
+    data,
+    isPending,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["threads"],
+    queryFn: getThreads,
+  });
 
-  if (loading) return <p>Loading threads…</p>;
-  if (error) return <p className="err">Error: {error.message}</p>;
+  if (isPending) {
+    return <p>Loading threads...</p>;
+  }
+
+  if (isError) {
+    return <p>Error: {error.message}</p>;
+  }
 
   return (
-    <ul className="threads">
-      {threads.map((t) => (
-        <li className="card" key={t.id}>
-          <h3>{t.title}</h3>
-          <p>{t.body}</p>
+    <ul>
+      {data.map((thread) => (
+        <li key={thread.id}>
+          {thread.title}
         </li>
       ))}
     </ul>
   );
 }
+
+export default ThreadList;
